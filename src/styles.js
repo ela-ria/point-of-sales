@@ -1,0 +1,110 @@
+export const S = {
+    app: {
+        fontFamily: "'Courier New', monospace",
+        height: "100vh",
+        width: "100vw",
+        background: "#0f172a",
+        color: "#f1f5f9",
+        display: "flex",
+        overflow: "hidden",
+        position: "fixed",
+        top: 0,
+        left: 0,
+    },
+    sidebar: {
+        width: 220,
+        background: "#1e293b",
+        padding: "24px 0",
+        display: "flex",
+        flexDirection: "column",
+        borderRight: "1px solid #334155",
+        flexShrink: 0,
+        height: "100vh",
+        overflowY: "auto",
+    },
+    main: {
+        flex: 1,
+        overflowY: "auto",
+        padding: 24,
+        height: "100vh",
+        boxSizing: "border-box",
+    },
+    card: {
+        background: "#1e293b",
+        border: "1px solid #334155",
+        borderRadius: 8,
+        padding: 20,
+        marginBottom: 16,
+    },
+    input: {
+        background: "#0f172a",
+        border: "1px solid #334155",
+        borderRadius: 6,
+        padding: "8px 12px",
+        color: "#f1f5f9",
+        width: "100%",
+        boxSizing: "border-box",
+        fontFamily: "'Courier New', monospace",
+        fontSize: 14,
+    },
+    label: {
+        fontSize: 12,
+        color: "#94a3b8",
+        marginBottom: 4,
+        display: "block",
+    },
+    overlay: {
+        position: "fixed",
+        top: 0, left: 0, right: 0, bottom: 0,
+        background: "rgba(0,0,0,0.75)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 999,
+    },
+    modal: {
+        background: "#1e293b",
+        border: "1px solid #334155",
+        borderRadius: 12,
+        padding: 28,
+        width: 420,
+        maxHeight: "90vh",
+        overflowY: "auto",
+    },
+    outlineBtn: {
+        background: "transparent",
+        color: "#f59e0b",
+        border: "1px solid #f59e0b",
+        borderRadius: 6,
+        padding: "6px 14px",
+        cursor: "pointer",
+        fontFamily: "'Courier New', monospace",
+        fontSize: 13,
+    },
+};
+
+export function btn(bg, color) {
+    return {
+        background: bg || "#f59e0b",
+        color: color || "#0f172a",
+        border: "none",
+        borderRadius: 6,
+        padding: "8px 16px",
+        cursor: "pointer",
+        fontFamily: "'Courier New', monospace",
+        fontWeight: "bold",
+        fontSize: 13,
+    };
+}
+
+export function badge(color) {
+    return {
+        background: color + "22",
+        color: color,
+        padding: "2px 10px",
+        borderRadius: 100,
+        fontSize: 12,
+        fontWeight: "bold",
+        display: "inline-block",
+    };
+}
