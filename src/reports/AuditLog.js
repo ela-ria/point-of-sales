@@ -1,5 +1,5 @@
 import React from "react";
-import { S, badge } from "./styles";
+import { S, badge } from "../styles";
 
 function AuditLog({ voidLog, cancelLog }) {
   const allLogs = [

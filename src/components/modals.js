@@ -1,6 +1,6 @@
 import React from "react";
-import { DISCOUNTS, formatPHP } from "./constants";
-import { S, btn } from "./styles";
+import { DISCOUNTS, formatPHP } from "../constants";
+import { S, btn } from "../styles";
 
 /* ─── Discount Modal ─── */
 export function DiscountModal({ appliedDiscount, onApply, onRemove, onClose }) {

@@ -1,6 +1,6 @@
 import React from "react";
-import { formatPHP } from "./constants";
-import { S, btn, badge } from "./styles";
+import { formatPHP } from "../constants";
+import { S, btn, badge } from "../styles";
 
 function TransactionsPage({ transactions, initiatePostVoid, currentUser }) {
   const sorted = transactions.slice().reverse();

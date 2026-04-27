@@ -1,6 +1,6 @@
 import React from "react";
-import { formatPHP } from "./constants";
-import { S, btn } from "./styles";
+import { formatPHP } from "../constants";
+import { S, btn } from "../styles";
 
 function Receipt({ txn, onClose, onReprint }) {
   const lineStyle = {

@@ -1,5 +1,5 @@
 import React from "react";
-import { btn } from "./styles";
+import { btn } from "../styles";
 
 function Sidebar({ currentUser, page, setPage, onLogout }) {
   var navItems =

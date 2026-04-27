@@ -1,5 +1,5 @@
 import React from "react";
-import { S, btn, badge } from "./styles";
+import { S, btn, badge } from "../styles";
 
 function UsersPage({
     users,

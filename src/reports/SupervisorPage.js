@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { formatPHP } from "./constants";
-import { S, btn, badge } from "./styles";
+import { formatPHP } from "../constants";
+import { S, btn, badge } from "../styles";
 
 function SupervisorPage({ transactions, initiatePostVoid, voidLog, cancelLog }) {
   const [tab, setTab] = useState("active");
