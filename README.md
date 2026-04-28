@@ -1,53 +1,123 @@
-# Getting Started with Create React App
+# Point of Sales (POS) System
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A full-stack point of sale application built with React (frontend) and Laravel (backend). This system provides comprehensive tools for managing sales transactions, products, users, and generating audit reports.
 
-## Available Scripts
+## Project Overview
 
-In the project directory, you can run:
+This is a modern POS system designed to streamline retail operations with role-based access control, transaction management, and detailed reporting capabilities.
 
-### `npm start`
+### Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Sales Management** - Process customer transactions and manage receipts
+- **Product Management** - Create, update, and manage product inventory
+- **User Management** - Manage users with different roles and permissions
+- **Audit Logging** - Track all system activities and transactions
+- **Admin Dashboard** - View key metrics and system overview
+- **Reports** - Generate transaction reports and audit logs
+- **Role-Based Access Control** - Supervisor and admin roles with different permissions
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Tech Stack
 
-### `npm test`
+### Frontend
+- **React** - UI library
+- **JavaScript** - Core language
+- **CSS** - Styling
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Backend
+- **Laravel** - Web application framework
+- **PHP** - Server-side language
+- **Laravel Sanctum** - API authentication
+- **CORS** - Cross-origin resource sharing configured
 
-### `npm run build`
+## Project Structure
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```
+point-of-sales/
+├── frontend (React app)
+│   ├── src/
+│   │   ├── auth/          - Login and user management pages
+│   │   ├── components/    - Reusable UI components
+│   │   ├── pages/         - Main application pages
+│   │   ├── reports/       - Reporting pages
+│   │   └── App.js         - Main app component
+│   ├── public/
+│   └── package.json
+│
+└── backend (Laravel app)
+    ├── app/               - Application code
+    ├── bootstrap/         - Application bootstrapping
+    ├── config/            - Configuration files (CORS, etc.)
+    ├── database/          - Database migrations and seeds
+    ├── routes/            - API routes
+    └── vendor/            - Dependencies
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Getting Started
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Prerequisites
+- Node.js and npm (for frontend)
+- PHP 8.1+ (for backend)
+- Composer (for backend dependencies)
 
-### `npm run eject`
+### Installation & Running
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+#### Frontend
+```bash
+npm install
+npm start
+```
+The app will open at [http://localhost:3000](http://localhost:3000)
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+#### Backend
+```bash
+cd backend
+composer install
+php artisan serve
+```
+The API will run at [http://localhost:8000](http://localhost:8000)
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## Main Pages & Components
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Pages
+- **AdminDashboard** - System overview and metrics
+- **POSPage** - Main point of sale interface
+- **ProductsPage** - Product management
+- **LoginPage** - User authentication
+- **TransactionsPage** - Transaction history
+- **AuditLog** - System activity logs
+- **SupervisorPage** - Supervisor dashboard
 
-## Learn More
+### Components
+- **Sidebar** - Navigation menu
+- **Receipt** - Receipt display and printing
+- **Modals** - Dialog components
+- **PrintReceipt** - Print functionality
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Configuration
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### CORS Settings
+API CORS is configured in `backend/config/cors.php` to allow requests from:
+- http://localhost:3000
+- http://localhost:5173
 
-### Code Splitting
+### Environment Variables
+Configure backend settings in `backend/.env`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## API Endpoints
+
+The backend provides REST API endpoints for:
+- Authentication (Sanctum)
+- Product management
+- Transaction processing
+- User management
+- Audit logging
+
+## Development Notes
+
+- The frontend is built with Create React App
+- The backend follows Laravel conventions
+- Role-based middleware is implemented for access control
+- CORS is enabled for frontend-backend communication
 
 ### Analyzing the Bundle Size
 
