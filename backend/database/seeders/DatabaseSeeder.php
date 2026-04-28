@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\Product;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -33,15 +34,16 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Sample products
-        $products = [
-            ['name' => 'Lucky Me Pancit Canton', 'barcode' => '4800016430604', 'price' => 15.00,  'stock_quantity' => 100],
-            ['name' => 'Nestle Milo 300g',        'barcode' => '4800052111201', 'price' => 120.00, 'stock_quantity' => 50],
-            ['name' => 'Palmolive Shampoo 90ml',  'barcode' => '6281006518000', 'price' => 35.00,  'stock_quantity' => 75],
-            ['name' => 'Colgate Toothpaste 75ml', 'barcode' => '6281003601013', 'price' => 55.00,  'stock_quantity' => 60],
-            ['name' => 'Monggo 250g',             'barcode' => '4800017780092', 'price' => 25.00,  'stock_quantity' => 80],
-            ['name' => 'Tide Powder 66g',         'barcode' => '4902430077088', 'price' => 10.00,  'stock_quantity' => 120],
-            ['name' => 'Century Tuna 155g',       'barcode' => '4800016535544', 'price' => 38.00,  'stock_quantity' => 90],
-        ];
+      $products = [
+    ['name' => 'Lucky Me Pancit Canton', 'category' => 'Groceries',      'barcode' => '001', 'price' => 14.00, 'stock_quantity' => 50],
+    ['name' => 'San Miguel Beer',         'category' => 'Groceries',      'barcode' => '002', 'price' => 55.00, 'stock_quantity' => 30],
+    ['name' => 'Monggo Seeds 500g',       'category' => 'Groceries',      'barcode' => '003', 'price' => 38.00, 'stock_quantity' => 40],
+    ['name' => 'Ballpen Blue (Pcs)',       'category' => 'School Supplies','barcode' => '004', 'price' => 7.00,  'stock_quantity' => 100],
+    ['name' => 'Intermediate Pad',        'category' => 'School Supplies','barcode' => '005', 'price' => 25.00, 'stock_quantity' => 60],
+    ['name' => 'Tide Powder 500g',        'category' => 'Household',      'barcode' => '006', 'price' => 42.00, 'stock_quantity' => 35],
+    ['name' => 'Colgate Toothpaste',      'category' => 'Household',      'barcode' => '007', 'price' => 59.00, 'stock_quantity' => 25],
+    ['name' => 'Globe Prepaid Load 50',   'category' => 'Others',         'barcode' => '008', 'price' => 50.00, 'stock_quantity' => 200],
+];
 
         foreach ($products as $p) {
             Product::create($p);

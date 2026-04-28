@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 
 function LoginPage({ onLogin, notification }) {
-    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
 
     function handleSubmit() {
-        onLogin(username, password);
+        onLogin(email, password);
     }
 
     function handleKeyDown(e) {
@@ -95,15 +96,16 @@ function LoginPage({ onLogin, notification }) {
                     <div style={{ width: 60, height: 2, background: "#f59e0b", margin: "12px auto 0" }} />
                 </div>
 
-                {/* Username */}
+                {/* Email */}
                 <div style={{ marginBottom: 16 }}>
-                    <label style={labelStyle}>USERNAME</label>
+                    <label style={labelStyle}>EMAIL</label>
                     <input
                         style={inputStyle}
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder="Enter username"
+                        placeholder="Enter email"
                         autoFocus
                     />
                 </div>
@@ -111,14 +113,32 @@ function LoginPage({ onLogin, notification }) {
                 {/* Password */}
                 <div style={{ marginBottom: 24 }}>
                     <label style={labelStyle}>PASSWORD</label>
-                    <input
-                        style={inputStyle}
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder="Enter password"
-                    />
+                    <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+                        <input
+                            style={inputStyle}
+                            type={showPassword ? "text" : "password"}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder="Enter password"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            style={{
+                                position: "absolute",
+                                right: 10,
+                                background: "none",
+                                border: "none",
+                                color: "#94a3b8",
+                                cursor: "pointer",
+                                fontSize: 12,
+                                padding: 0,
+                            }}
+                        >
+                            {showPassword ? "HIDE" : "SHOW"}
+                        </button>
+                    </div>
                 </div>
 
                 <button style={loginBtnStyle} onClick={handleSubmit}>
@@ -128,9 +148,9 @@ function LoginPage({ onLogin, notification }) {
                 {/* Demo credentials */}
                 <div style={{ marginTop: 24, borderTop: "1px solid #334155", paddingTop: 16 }}>
                     <div style={{ fontSize: 11, color: "#475569", marginBottom: 6 }}>DEMO ACCOUNTS:</div>
-                    <div style={{ fontSize: 11, color: "#64748b" }}>admin / admin123 — Administrator</div>
-                    <div style={{ fontSize: 11, color: "#64748b" }}>cashier1 / cash123 — Cashier</div>
-                    <div style={{ fontSize: 11, color: "#64748b" }}>super1 / super123 — Supervisor</div>
+                    <div style={{ fontSize: 11, color: "#64748b" }}>admin@sariph.com — Administrator</div>
+                    <div style={{ fontSize: 11, color: "#64748b" }}>cashier@sariph.com — Cashier</div>
+                    <div style={{ fontSize: 11, color: "#64748b" }}>supervisor@sariph.com — Supervisor</div>
                 </div>
             </div>
         </div>

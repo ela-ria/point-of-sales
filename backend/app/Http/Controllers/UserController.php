@@ -25,14 +25,19 @@ class UserController extends Controller
             'email'    => 'required|email|unique:users',
             'password' => 'required|string|min:6',
             'role'     => 'required|in:cashier,supervisor,admin',
+            'is_active' => 'sometimes|boolean',
         ]);
 
+        // Default to active if not specified
+        if (!isset($data['is_active'])) {
+            $data['is_active'] = true;
+        }
 
         $data['password'] = bcrypt($data['password']);
         $user = User::create($data);
 
 
-        return response()->json($user->only('id', 'name', 'email', 'role'), 201);
+        return response()->json($user->only('id', 'name', 'email', 'role', 'is_active'), 201);
     }
 
 
@@ -57,15 +62,15 @@ class UserController extends Controller
 
 
         $user->update($data);
-        return response()->json($user->only('id', 'name', 'email', 'role'));
+        return response()->json($user->only('id', 'name', 'email', 'role', 'is_active'));
     }
 
 
-    // DELETE /api/users/{id}
+    // DELETE /api/users/{id} - soft delete by deactivating
     public function destroy($id)
     {
         $user = User::findOrFail($id);
-        $user->delete();
-        return response()->json(['message' => 'User deleted successfully.']);
+        $user->update(['is_active' => false]);
+        return response()->json(['message' => 'User deactivated successfully.']);
     }
 }

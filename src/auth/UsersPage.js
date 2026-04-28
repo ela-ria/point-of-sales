@@ -1,46 +1,156 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { S, btn, badge } from "../styles";
+import { fetchUsers, createUser, updateUser, deleteUser } from "../api";
 
-function UsersPage({
-    users,
-    userForm,
-    setUserForm,
-    editUser,
-    setEditUser,
-    saveUser,
-    toggleActive,
-}) {
+function UsersPage() {
+    const [users, setUsers] = useState([]);
+    const [userForm, setUserForm] = useState({ name: "", email: "", password: "", role: "cashier" });
+    const [editUser, setEditUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [notification, setNotification] = useState(null);
+
+    // Fetch users on mount
+    useEffect(() => {
+        (async () => {
+            try {
+                setLoading(true);
+                const data = await fetchUsers();
+                setUsers(data);
+                setError(null);
+            } catch (err) {
+                setError(err.message);
+                console.error("Failed to fetch users:", err);
+            } finally {
+                setLoading(false);
+            }
+        })();
+    }, []);
+
+    function notify(msg, type) {
+        setNotification({ msg, type: type || "success" });
+        setTimeout(() => setNotification(null), 2800);
+    }
+
     function handleEdit(u) {
         setEditUser(u);
         setUserForm({
             name: u.name,
-            username: u.username,
-            password: u.password,
+            email: u.email,
+            password: "",
             role: u.role,
         });
     }
 
     function handleCancelEdit() {
         setEditUser(null);
-        setUserForm({ name: "", username: "", password: "", role: "Cashier" });
+        setUserForm({ name: "", email: "", password: "", role: "cashier" });
     }
 
     function handleChange(field, value) {
         setUserForm((prev) => ({ ...prev, [field]: value }));
     }
 
+    async function saveUser() {
+        try {
+            if (!userForm.name || !userForm.email || (editUser && !userForm.password && !editUser.id)) {
+                notify("Please fill all required fields", "error");
+                return;
+            }
+
+            if (editUser) {
+                // Update existing user
+                const payload = {
+                    name: userForm.name,
+                    email: userForm.email,
+                    role: userForm.role,
+                };
+                if (userForm.password) {
+                    payload.password = userForm.password;
+                }
+                await updateUser(editUser.id, payload);
+                setUsers(users.map(u => u.id === editUser.id ? { ...editUser, ...payload } : u));
+                notify("User updated successfully", "success");
+            } else {
+                // Create new user
+                if (!userForm.password) {
+                    notify("Password is required for new users", "error");
+                    return;
+                }
+                const newUser = await createUser({
+                    name: userForm.name,
+                    email: userForm.email,
+                    password: userForm.password,
+                    role: userForm.role,
+                    is_active: true, // New users are active by default
+                });
+                setUsers([...users, newUser]);
+                notify("User created successfully", "success");
+            }
+
+            handleCancelEdit();
+        } catch (err) {
+            notify(err.message, "error");
+            console.error("Failed to save user:", err);
+        }
+    }
+
+    async function toggleActive(id) {
+        try {
+            const user = users.find(u => u.id === id);
+            if (user.is_active) {
+                // Deactivate
+                await deleteUser(id);
+                setUsers(users.map(u => u.id === id ? { ...u, is_active: false } : u));
+                notify("User deactivated successfully", "success");
+            } else {
+                // Activate
+                await updateUser(id, { is_active: true });
+                setUsers(users.map(u => u.id === id ? { ...u, is_active: true } : u));
+                notify("User activated successfully", "success");
+            }
+        } catch (err) {
+            notify(err.message, "error");
+            console.error("Failed to toggle user status:", err);
+        }
+    }
+
     const roleColor = (role) =>
-        role === "Administrator" ? "#f59e0b" : role === "Supervisor" ? "#a855f7" : "#3b82f6";
+        role === "admin" ? "#f59e0b" : role === "supervisor" ? "#a855f7" : "#3b82f6";
+
+    if (loading) {
+        return <div style={{ color: "#f1f5f9", textAlign: "center", paddingTop: 40 }}>Loading users...</div>;
+    }
+
+    if (error) {
+        return <div style={{ color: "#ef4444", textAlign: "center", paddingTop: 40 }}>Error: {error}</div>;
+    }
 
     return (
         <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: 20 }}>
+            {notification && (
+                <div style={{
+                    position: "fixed",
+                    top: 20,
+                    right: 20,
+                    padding: "12px 20px",
+                    borderRadius: 4,
+                    background: notification.type === "error" ? "#ef4444" : "#10b981",
+                    color: "#fff",
+                    zIndex: 1000,
+                    fontSize: 13,
+                }}>
+                    {notification.msg}
+                </div>
+            )}
+
             {/* Users List */}
             <div>
                 <h2 style={{ color: "#f59e0b", margin: "0 0 6px", fontSize: 20, letterSpacing: 1 }}>
                     USER MANAGEMENT
                 </h2>
                 <p style={{ color: "#64748b", fontSize: 13, margin: "0 0 20px" }}>
-                    {users.length} total users &bull; {users.filter((u) => u.active).length} active
+                    {users.length} total users &bull; {users.filter((u) => u.is_active).length} active
                 </p>
 
                 {users.map((u) => (
@@ -56,6 +166,7 @@ function UsersPage({
                                 editUser && editUser.id === u.id
                                     ? "3px solid #f59e0b"
                                     : "3px solid transparent",
+                            opacity: u.is_active ? 1 : 0.6,
                         }}
                     >
                         {/* Avatar + Info */}
@@ -82,16 +193,16 @@ function UsersPage({
                                     {u.name}
                                 </div>
                                 <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
-                                    @{u.username} &bull;{" "}
-                                    <span style={{ color: roleColor(u.role) }}>{u.role}</span>
+                                    {u.email} &bull;{" "}
+                                    <span style={{ color: roleColor(u.role) }}>{u.role.toUpperCase()}</span>
                                 </div>
                             </div>
                         </div>
 
                         {/* Actions */}
                         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                            <span style={badge(u.active ? "#10b981" : "#ef4444")}>
-                                {u.active ? "Active" : "Inactive"}
+                            <span style={badge(u.is_active ? "#10b981" : "#ef4444")}>
+                                {u.is_active ? "Active" : "Inactive"}
                             </span>
                             <button
                                 style={{ ...btn("#334155", "#f1f5f9"), fontSize: 11 }}
@@ -101,12 +212,12 @@ function UsersPage({
                             </button>
                             <button
                                 style={btn(
-                                    u.active ? "#7f1d1d" : "#14532d",
-                                    u.active ? "#fca5a5" : "#86efac"
+                                    u.is_active ? "#7f1d1d" : "#14532d",
+                                    u.is_active ? "#fca5a5" : "#86efac"
                                 )}
                                 onClick={() => toggleActive(u.id)}
                             >
-                                {u.active ? "DEACTIVATE" : "ACTIVATE"}
+                                {u.is_active ? "DEACTIVATE" : "ACTIVATE"}
                             </button>
                         </div>
                     </div>
@@ -130,21 +241,22 @@ function UsersPage({
                     placeholder="e.g. Juan dela Cruz"
                 />
 
-                <label style={S.label}>USERNAME</label>
+                <label style={S.label}>EMAIL</label>
                 <input
                     style={{ ...S.input, marginBottom: 14 }}
-                    value={userForm.username}
-                    onChange={(e) => handleChange("username", e.target.value)}
-                    placeholder="e.g. cashier2"
+                    type="email"
+                    value={userForm.email}
+                    onChange={(e) => handleChange("email", e.target.value)}
+                    placeholder="e.g. user@sariph.com"
                 />
 
-                <label style={S.label}>PASSWORD</label>
+                <label style={S.label}>PASSWORD {editUser && "(leave empty to keep)"}</label>
                 <input
                     style={{ ...S.input, marginBottom: 14 }}
                     type="password"
                     value={userForm.password}
                     onChange={(e) => handleChange("password", e.target.value)}
-                    placeholder="Enter password"
+                    placeholder={editUser ? "Leave empty to keep current password" : "Enter password"}
                 />
 
                 <label style={S.label}>ROLE</label>
@@ -153,9 +265,9 @@ function UsersPage({
                     value={userForm.role}
                     onChange={(e) => handleChange("role", e.target.value)}
                 >
-                    <option value="Cashier">Cashier</option>
-                    <option value="Supervisor">Supervisor</option>
-                    <option value="Administrator">Administrator</option>
+                    <option value="cashier">Cashier</option>
+                    <option value="supervisor">Supervisor</option>
+                    <option value="admin">Admin</option>
                 </select>
 
                 <div style={{ display: "flex", gap: 8 }}>

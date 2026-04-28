@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Product;
+use App\Models\User;
 use App\Models\CancelSale;
 use App\Models\PostVoidSale;
 use Illuminate\Http\Request;
@@ -13,9 +14,37 @@ class SaleController extends Controller
 {
     public function index()
     {
-        $sales = Sale::with(['cashier:id,name', 'activeItems.product'])
+        // Completed sales with items and products
+        $sales = Sale::with(['cashier:id,name', 'items.product:id,name,price'])
+            ->where('status', 'completed')
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->get()
+            ->map(function($sale) {
+                return [
+                    'id' => $sale->id,
+                    'receiptNo' => 'OR-' . str_pad($sale->id, 6, '0', STR_PAD_LEFT),
+                    'cashier' => $sale->cashier ? $sale->cashier->name : 'Unknown',
+                    'cashier_id' => $sale->cashier_id,
+                    'total' => (float) $sale->total,
+                    'subtotal' => (float) $sale->subtotal,
+                    'discount_amount' => (float) $sale->discount_amount,
+                    'discount_type' => $sale->discount_type,
+                    'items' => $sale->items->map(function($item) {
+                        return [
+                            'product' => [
+                                'id' => $item->product->id,
+                                'name' => $item->product->name,
+                                'price' => (float) $item->product->price,
+                            ],
+                            'quantity' => $item->quantity,
+                            'unit_price' => (float) $item->unit_price,
+                            'subtotal' => (float) $item->subtotal,
+                        ];
+                    }),
+                    'status' => $sale->status,
+                    'created_at' => $sale->created_at,
+                ];
+            });
         return response()->json($sales);
     }
 
@@ -71,7 +100,7 @@ class SaleController extends Controller
         $sale->recalculate();
         return response()->json([
             'item' => $item->load('product'),
-            'sale' => $sale->fresh(),
+            'sale' => $sale->fresh()->load('items.product'),
         ], 201);
     }
 
@@ -161,19 +190,132 @@ class SaleController extends Controller
 
     public function voidedSales()
     {
-        $sales = Sale::with(['cashier:id,name', 'postVoidRecord.supervisor:id,name'])
+        $sales = Sale::with([
+            'cashier:id,name',
+            'items.product:id,name,price',
+            'postVoidRecord.supervisor:id,name'
+        ])
             ->where('status', 'voided')
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->get()
+            ->map(function($sale) {
+                return [
+                    'id' => $sale->id,
+                    'receiptNo' => 'OR-' . str_pad($sale->id, 6, '0', STR_PAD_LEFT),
+                    'cashier' => $sale->cashier ? $sale->cashier->name : 'Unknown',
+                    'total' => (float) $sale->total,
+                    'items' => $sale->items->map(function($item) {
+                        return [
+                            'name' => $item->product->name,
+                            'quantity' => $item->quantity,
+                            'unit_price' => (float) $item->unit_price,
+                            'subtotal' => (float) $item->subtotal,
+                        ];
+                    }),
+                    'voided' => true,
+                    'voidReason' => $sale->postVoidRecord ? $sale->postVoidRecord->reason : 'N/A',
+                    'approvedBy' => $sale->postVoidRecord && $sale->postVoidRecord->supervisor ? $sale->postVoidRecord->supervisor->name : 'Unknown',
+                    'created_at' => $sale->created_at,
+                ];
+            });
         return response()->json($sales);
     }
 
     public function cancelledSales()
     {
-        $sales = Sale::with(['cashier:id,name', 'cancelRecord.cashier:id,name'])
+        $sales = Sale::with([
+            'cashier:id,name',
+            'items.product:id,name,price',
+            'cancelRecord.cashier:id,name'
+        ])
             ->where('status', 'cancelled')
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->get()
+            ->map(function($sale) {
+                return [
+                    'id' => $sale->id,
+                    'receiptNo' => 'OR-' . str_pad($sale->id, 6, '0', STR_PAD_LEFT),
+                    'cashier' => $sale->cashier ? $sale->cashier->name : 'Unknown',
+                    'total' => (float) $sale->total,
+                    'items' => $sale->items->map(function($item) {
+                        return [
+                            'name' => $item->product->name,
+                            'quantity' => $item->quantity,
+                            'unit_price' => (float) $item->unit_price,
+                            'subtotal' => (float) $item->subtotal,
+                        ];
+                    }),
+                    'voided' => false,
+                    'cancelReason' => $sale->cancelRecord ? $sale->cancelRecord->reason : 'N/A',
+                    'created_at' => $sale->created_at,
+                ];
+            });
         return response()->json($sales);
+    }
+
+    public function dashboardStats()
+    {
+        try {
+            // Total products and active count
+            $totalProducts = Product::count();
+            $activeProducts = Product::where('is_active', true)->count();
+
+            // Active users
+            $activeUsers = User::where('is_active', true)->count();
+            $totalUsers = User::count();
+
+            // Completed sales and revenue
+            $completedSales = Sale::where('status', 'completed')->with('cashier:id,name')->get();
+            $totalSalesCount = $completedSales->count();
+            $totalRevenue = $completedSales->sum('total');
+
+            // Recent transactions (last 10)
+            $recentTransactions = $completedSales
+                ->sortByDesc('created_at')
+                ->take(10)
+                ->map(function($sale) {
+                    return [
+                        'id' => $sale->id,
+                        'receiptNo' => 'OR-' . str_pad($sale->id, 6, '0', STR_PAD_LEFT),
+                        'cashier' => $sale->cashier ? $sale->cashier->name : 'Unknown',
+                        'total' => (float) $sale->total,
+                        'voided' => false,
+                        'created_at' => $sale->created_at,
+                    ];
+                })
+                ->values();
+
+            // Products by category
+            $categories = ['Groceries', 'School Supplies', 'Household', 'Others'];
+            $productsByCategory = [];
+            foreach ($categories as $category) {
+                $productsByCategory[] = [
+                    'category' => $category,
+                    'count' => Product::where('category', $category)->count(),
+                ];
+            }
+
+            // Low stock items
+            $lowStockItems = Product::where('is_active', true)
+                ->where('stock_quantity', '<=', 5)
+                ->get(['id', 'name', 'stock_quantity']);
+
+            return response()->json([
+                'totalProducts' => $totalProducts,
+                'activeProducts' => $activeProducts,
+                'activeUsers' => $activeUsers,
+                'totalUsers' => $totalUsers,
+                'totalSalesCount' => $totalSalesCount,
+                'totalRevenue' => (float) $totalRevenue,
+                'recentTransactions' => $recentTransactions,
+                'productsByCategory' => $productsByCategory,
+                'lowStockItems' => $lowStockItems,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error fetching dashboard stats',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }

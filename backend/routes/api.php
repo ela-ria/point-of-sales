@@ -30,11 +30,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post  ('/users',     [UserController::class, 'store']);
         Route::put   ('/users/{id}',[UserController::class, 'update']);
         Route::delete('/users/{id}',[UserController::class, 'destroy']);
+
+        // Dashboard stats
+        Route::get('/dashboard/stats', [SaleController::class, 'dashboardStats']);
     });
 
     // Sales — cashier and admin
     Route::middleware('role:cashier,admin')->group(function () {
-        Route::get   ('/sales',                          [SaleController::class, 'index']);
         Route::post  ('/sales',                          [SaleController::class, 'store']);
         Route::get   ('/sales/{id}',                     [SaleController::class, 'show']);
         Route::post  ('/sales/{id}/items',               [SaleController::class, 'addItem']);
@@ -45,10 +47,19 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get   ('/sales/{id}/receipt',             [ReceiptController::class, 'show']);
     });
 
-    // Post-void & audit — supervisor and admin
+    // View completed sales — cashier, supervisor, and admin
+    Route::middleware('role:cashier,supervisor,admin')->group(function () {
+        Route::get   ('/sales',                          [SaleController::class, 'index']);
+    });
+
+    // Post-void write action — supervisor and admin only
     Route::middleware('role:supervisor,admin')->group(function () {
         Route::post('/sales/{id}/post-void', [SaleController::class, 'postVoid']);
-        Route::get ('/voided-sales',         [SaleController::class, 'voidedSales']);
-        Route::get ('/cancelled-sales',      [SaleController::class, 'cancelledSales']);
+    });
+
+    // Read-only audit/transaction history — cashier, supervisor, and admin
+    Route::middleware('role:cashier,supervisor,admin')->group(function () {
+        Route::get('/voided-sales',    [SaleController::class, 'voidedSales']);
+        Route::get('/cancelled-sales', [SaleController::class, 'cancelledSales']);
     });
 });

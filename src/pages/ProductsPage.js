@@ -1,39 +1,137 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { CATEGORIES, formatPHP } from "../constants";
 import { S, btn, badge } from "../styles";
+import { fetchProducts, createProduct, updateProduct, deactivateProduct } from "../api";
 
-function ProductsPage({
-  products,
-  productForm,
-  setProductForm,
-  editProduct,
-  setEditProduct,
-  saveProduct,
-  toggleProductActive,
-  notify,
-}) {
+function ProductsPage() {
+  const [products, setProducts] = useState([]);
+  const [productForm, setProductForm] = useState({ name: "", barcode: "", price: "", stock_quantity: "", category: "Groceries" });
+  const [editProduct, setEditProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [notification, setNotification] = useState(null);
+
+  // Fetch products on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoading(true);
+        const data = await fetchProducts();
+        setProducts(data);
+        setError(null);
+      } catch (err) {
+        setError(err.message);
+        console.error("Failed to fetch products:", err);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  function notify(msg, type) {
+    setNotification({ msg, type: type || "success" });
+    setTimeout(() => setNotification(null), 2800);
+  }
+
   function handleEdit(p) {
     setEditProduct(p);
     setProductForm({
       name: p.name,
       barcode: p.barcode,
       price: p.price,
-      stock: p.stock,
+      stock_quantity: p.stock_quantity,
       category: p.category,
     });
   }
 
   function handleCancelEdit() {
     setEditProduct(null);
-    setProductForm({ name: "", barcode: "", price: "", stock: "", category: "Groceries" });
+    setProductForm({ name: "", barcode: "", price: "", stock_quantity: "", category: "Groceries" });
   }
 
   function handleChange(field, value) {
     setProductForm((prev) => ({ ...prev, [field]: value }));
   }
 
+  async function saveProduct() {
+    try {
+      if (!productForm.name || !productForm.barcode || !productForm.price || productForm.stock_quantity === "") {
+        notify("Please fill all fields", "error");
+        return;
+      }
+
+      const payload = {
+        name: productForm.name,
+        barcode: productForm.barcode,
+        price: parseFloat(productForm.price),
+        stock_quantity: parseInt(productForm.stock_quantity),
+        category: productForm.category,
+        is_active: true, // New products are active by default
+      };
+
+      if (editProduct) {
+        await updateProduct(editProduct.id, payload);
+        setProducts(products.map(p => p.id === editProduct.id ? { ...editProduct, ...payload } : p));
+        notify("Product updated successfully", "success");
+      } else {
+        const newProduct = await createProduct(payload);
+        setProducts([...products, newProduct]);
+        notify("Product created successfully", "success");
+      }
+
+      handleCancelEdit();
+    } catch (err) {
+      notify(err.message, "error");
+      console.error("Failed to save product:", err);
+    }
+  }
+
+  async function toggleProductActive(id) {
+    try {
+      const product = products.find(p => p.id === id);
+      if (product.is_active) {
+        // Deactivate
+        await deactivateProduct(id);
+        setProducts(products.map(p => p.id === id ? { ...p, is_active: false } : p));
+        notify("Product deactivated successfully", "success");
+      } else {
+        // Activate - use update endpoint to set is_active to true
+        await updateProduct(id, { is_active: true });
+        setProducts(products.map(p => p.id === id ? { ...p, is_active: true } : p));
+        notify("Product activated successfully", "success");
+      }
+    } catch (err) {
+      notify(err.message, "error");
+      console.error("Failed to toggle product status:", err);
+    }
+  }
+
+  if (loading) {
+    return <div style={{ color: "#f1f5f9", textAlign: "center", paddingTop: 40 }}>Loading products...</div>;
+  }
+
+  if (error) {
+    return <div style={{ color: "#ef4444", textAlign: "center", paddingTop: 40 }}>Error: {error}</div>;
+  }
+
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 20 }}>
+      {notification && (
+        <div style={{
+          position: "fixed",
+          top: 20,
+          right: 20,
+          padding: "12px 20px",
+          borderRadius: 4,
+          background: notification.type === "error" ? "#ef4444" : "#10b981",
+          color: "#fff",
+          zIndex: 1000,
+          fontSize: 13,
+        }}>
+          {notification.msg}
+        </div>
+      )}
+
       {/* Product Table */}
       <div>
         <h2 style={{ color: "#f59e0b", margin: "0 0 6px", fontSize: 20, letterSpacing: 1 }}>
@@ -41,7 +139,7 @@ function ProductsPage({
         </h2>
         <p style={{ color: "#64748b", fontSize: 13, margin: "0 0 20px" }}>
           {products.length} total products &bull;{" "}
-          {products.filter((p) => p.active).length} active
+          {products.filter((p) => p.is_active).length} active
         </p>
 
         <div style={{ overflowX: "auto" }}>
@@ -75,6 +173,7 @@ function ProductsPage({
                     borderBottom: "1px solid #1e293b",
                     background:
                       editProduct && editProduct.id === p.id ? "#f59e0b08" : "transparent",
+                    opacity: p.is_active ? 1 : 0.6,
                   }}
                 >
                   <td style={{ padding: "10px 10px", color: "#64748b", fontFamily: "monospace" }}>
@@ -90,15 +189,15 @@ function ProductsPage({
                   <td
                     style={{
                       padding: "10px 10px",
-                      color: p.stock <= 5 ? "#ef4444" : "#10b981",
+                      color: p.stock_quantity <= 5 ? "#ef4444" : "#10b981",
                       fontWeight: "bold",
                     }}
                   >
-                    {p.stock}
+                    {p.stock_quantity}
                   </td>
                   <td style={{ padding: "10px 10px" }}>
-                    <span style={badge(p.active ? "#10b981" : "#ef4444")}>
-                      {p.active ? "Active" : "Inactive"}
+                    <span style={badge(p.is_active ? "#10b981" : "#ef4444")}>
+                      {p.is_active ? "Active" : "Inactive"}
                     </span>
                   </td>
                   <td style={{ padding: "10px 10px" }}>
@@ -110,12 +209,12 @@ function ProductsPage({
                     </button>
                     <button
                       style={btn(
-                        p.active ? "#7f1d1d" : "#14532d",
-                        p.active ? "#fca5a5" : "#86efac"
+                        p.is_active ? "#7f1d1d" : "#14532d",
+                        p.is_active ? "#fca5a5" : "#86efac"
                       )}
                       onClick={() => toggleProductActive(p.id)}
                     >
-                      {p.active ? "DEACTIVATE" : "ACTIVATE"}
+                      {p.is_active ? "DEACTIVATE" : "ACTIVATE"}
                     </button>
                   </td>
                 </tr>
@@ -166,8 +265,8 @@ function ProductsPage({
             <input
               style={S.input}
               type="number"
-              value={productForm.stock}
-              onChange={(e) => handleChange("stock", e.target.value)}
+              value={productForm.stock_quantity}
+              onChange={(e) => handleChange("stock_quantity", e.target.value)}
               placeholder="0"
             />
           </div>

@@ -10,10 +10,10 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    // GET /api/products
+    // GET /api/products - admin sees all (including inactive), cashier sees only active
     public function index()
     {
-        return response()->json(Product::active()->orderBy('name')->get());
+        return response()->json(Product::orderBy('name')->get());
     }
 
 
@@ -46,13 +46,18 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name'           => 'required|string|max:255',
-            'barcode'        => 'required|string|unique:products',
-            'price'          => 'required|numeric|min:0',
-            'category'       => 'sometimes|string|max:255',
-            'stock_quantity' => 'required|integer|min:0',
-        ]);
+    'name'           => 'required|string|max:255',
+    'category'       => 'nullable|string|max:100',
+    'barcode'        => 'required|string|unique:products',
+    'price'          => 'required|numeric|min:0',
+    'stock_quantity' => 'required|integer|min:0',
+    'is_active'      => 'sometimes|boolean',
+]);
 
+        // Default to active if not specified
+        if (!isset($data['is_active'])) {
+            $data['is_active'] = true;
+        }
 
         $product = Product::create($data);
         return response()->json($product, 201);
@@ -65,13 +70,14 @@ class ProductController extends Controller
         $product = Product::findOrFail($id);
 
 
-        $data = $request->validate([
-            'name'           => 'sometimes|string|max:255',
-            'barcode'        => 'sometimes|string|unique:products,barcode,' . $id,
-            'price'          => 'sometimes|numeric|min:0',
-            'category'       => 'sometimes|string|max:255',
-            'stock_quantity' => 'sometimes|integer|min:0',
-        ]);
+       $data = $request->validate([
+    'name'           => 'sometimes|string|max:255',
+    'category'       => 'sometimes|nullable|string|max:100',
+    'barcode'        => 'sometimes|string|unique:products,barcode,' . $id,
+    'price'          => 'sometimes|numeric|min:0',
+    'stock_quantity' => 'sometimes|integer|min:0',
+    'is_active'      => 'sometimes|boolean',
+]);
 
 
         $product->update($data);
@@ -84,6 +90,6 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
         $product->update(['is_active' => false]);
-        return response()->json(['message' => 'Product deactivated successfully.']);
+        return response()->json($product);
     }
 }

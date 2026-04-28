@@ -3,12 +3,12 @@ import { btn } from "../styles";
 
 function Sidebar({ currentUser, page, setPage, onLogout }) {
   var navItems =
-    currentUser.role === "Cashier"
+    currentUser.role === "cashier"
       ? [
           { id: "pos", label: "POS Terminal" },
           { id: "history", label: "My Transactions" },
         ]
-      : currentUser.role === "Supervisor"
+      : currentUser.role === "supervisor"
       ? [
           { id: "supervisor", label: "Supervisor Panel" },
           { id: "history", label: "Transactions" },
@@ -23,9 +23,9 @@ function Sidebar({ currentUser, page, setPage, onLogout }) {
         ];
 
   var roleColor =
-    currentUser.role === "Administrator"
+    currentUser.role === "admin"
       ? "#f59e0b"
-      : currentUser.role === "Supervisor"
+      : currentUser.role === "supervisor"
       ? "#a855f7"
       : "#3b82f6";
 
