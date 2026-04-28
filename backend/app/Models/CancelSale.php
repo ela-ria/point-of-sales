@@ -5,13 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class PostVoidSale extends Model
+class CancelSale extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'sale_id',
-        'supervisor_id',
+        'cashier_id',
         'reason',
     ];
 
@@ -20,8 +20,8 @@ class PostVoidSale extends Model
         return $this->belongsTo(Sale::class);
     }
 
-    public function supervisor()
+    public function cashier()
     {
-        return $this->belongsTo(User::class, 'supervisor_id');
+        return $this->belongsTo(User::class, 'cashier_id');
     }
 }
